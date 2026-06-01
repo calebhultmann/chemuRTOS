@@ -11,6 +11,6 @@ void systick_handler(void) {
     scheduler_tick();
 }
 
-static void default_handler(void) {
+void default_handler(void) {
     while(1);
 }

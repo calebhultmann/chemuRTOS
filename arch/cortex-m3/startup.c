@@ -1,6 +1,6 @@
 extern int main(void);
-extern void __libc_init_array(void);
-extern void system_init();
+// extern void __libc_init_array(void);
+extern void system_init(void);
 
 // Symbols defined by the linker script
 extern unsigned int _idata;
@@ -27,15 +27,15 @@ static void clear_bss(void) {
 // Normally provided by Newlib's runtime file crti.o, but we compile without
 // (-nostartfiles) Inserted by __libc_init_array because newlib was compiled with
 // _HAVE_INIT_FINI. We don't need it, so add an empty stub
-void _init(void) {}
+// void _init(void) {}
 
 void reset_handler(void) {
-    system_init();
-    
     copy_data();
     clear_bss();
     
-    __libc_init_array();
+    system_init();
+
+    // __libc_init_array();
 
     main();
 

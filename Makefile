@@ -46,6 +46,7 @@ LDFLAGS := \
 	-nostartfiles \
 	-T $(LDSCRIPT) \
 	-Wl,-Map=build/$(TARGET).map
+LDFLAGS += $(LDFLAGS_$(ARCH))
 
 BUILD_DIR := build
 
