@@ -1,7 +1,7 @@
 #define SYSTICK_BASE 0xE000E010
-#define CPU_CLOCK_HZ 25000000
 
-#define IVT_ARRAY_SIZE (16U)
+// Systick Tick Rate
+#define SYSTICK_HZ          1000
 
 // STCSR - Control and Status Register
 //          This configures the SysTick clock, enables the SysTick interrupt,
@@ -17,5 +17,3 @@ typedef struct {
     volatile uint32_t VAL;
     volatile uint32_t CALIB;
 } SysTick_Registers;
-
-#define SysTick ((SysTick_Registers*)SYSTICK_BASE)
