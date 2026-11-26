@@ -27,9 +27,14 @@ static bool  tcbUsed[MAX_TASKS];
 
 // should take a function pointer arg? for the actual task to do
 int create_task(void) {
+    (void) tcbPool;
+    (void) tcbUsed;
+    (void) taskStacks;
+
     // Set up TCB struct w/ stack
     // Set up exception frame in stack
     // set task state to ready
     // Add to task list
     // return task id? (Is this needed?)
+    return 0;
 }
