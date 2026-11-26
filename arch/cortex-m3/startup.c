@@ -1,3 +1,5 @@
+#include "arch.h"
+
 extern int main(void);
 // extern void __libc_init_array(void);
 extern void system_init(void);
@@ -22,6 +24,18 @@ static void clear_bss(void) {
     while (bss_ptr < &_ebss) {
         *bss_ptr++ = 0;
     }
+}
+
+void systick_init(uint32_t cpu_hz) {
+    SysTick->LOAD = (cpu_hz / SYSTICK_HZ) - 1; // Configure RVR
+    SysTick->VAL = 0;                          // Zero CVR
+}
+
+void systick_start() {
+    SysTick->CTRL =
+        (1 << 2) | // CLKSOURCE = CPU Clock
+        (1 << 1) | // TICKINT   = Enable interrupts
+        (1 << 0);  // ENABLE    = Start counter
 }
 
 // Normally provided by Newlib's runtime file crti.o, but we compile without

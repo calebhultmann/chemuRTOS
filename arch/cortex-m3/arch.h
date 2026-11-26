@@ -1,7 +1,4 @@
-#define SYSTICK_BASE 0xE000E010
-
-// Systick Tick Rate
-#define SYSTICK_HZ          1000
+#include <stdint.h>
 
 // STCSR - Control and Status Register
 //          This configures the SysTick clock, enables the SysTick interrupt,
@@ -17,3 +14,6 @@ typedef struct {
     volatile uint32_t VAL;
     volatile uint32_t CALIB;
 } SysTick_Registers;
+
+#define SYSTICK_BASE 0xE000E010
+#define SysTick ((SysTick_Registers*)SYSTICK_BASE)
