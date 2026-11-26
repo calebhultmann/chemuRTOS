@@ -34,7 +34,10 @@ CFLAGS_cortex-m3 := -mcpu=cortex-m3 -mthumb
 CFLAGS := \
 	-g \
 	-std=c11 \
-	-O0
+	-O0 \
+	-Wall \
+	-Wextra \
+	-ffreestanding
 CFLAGS += $(CFLAGS_$(ARCH))
 CFLAGS += -Iarch/$(ARCH) -Iboard/$(BOARD)
 
