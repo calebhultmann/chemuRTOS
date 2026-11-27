@@ -26,18 +26,6 @@ static void clear_bss(void) {
     }
 }
 
-void systick_init(uint32_t cpu_hz) {
-    SysTick->LOAD = (cpu_hz / SYSTICK_HZ) - 1; // Configure RVR
-    SysTick->VAL = 0;                          // Zero CVR
-}
-
-void systick_start() {
-    SysTick->CTRL =
-        (1 << 2) | // CLKSOURCE = CPU Clock
-        (1 << 1) | // TICKINT   = Enable interrupts
-        (1 << 0);  // ENABLE    = Start counter
-}
-
 // Normally provided by Newlib's runtime file crti.o, but we compile without
 // (-nostartfiles) Inserted by __libc_init_array because newlib was compiled with
 // _HAVE_INIT_FINI. We don't need it, so add an empty stub
