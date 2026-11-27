@@ -56,6 +56,7 @@ CPUFLAGS := $(CPUFLAGS_$(ARCH))
 
 CFLAGS := $(CPUFLAGS) -std=c11 -g -O0 \
           -Wall -Wextra -ffreestanding \
+		  -Wmissing-prototypes \
           -MMD -MP                     # emit .d files so header edits trigger rebuilds
 ASFLAGS := $(CPUFLAGS) -g -MMD -MP
 
