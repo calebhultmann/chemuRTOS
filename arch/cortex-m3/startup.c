@@ -1,5 +1,7 @@
 #include "board_api.h"
 
+#include "handlers.h"
+
 extern int main(void);
 // extern void __libc_init_array(void);
 

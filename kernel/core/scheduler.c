@@ -1,5 +1,7 @@
 #include "arch_api.h"
 #include "board_api.h"
+#include "kernel_port.h"
+#include "kernel.h"
 
 #include "config.h"
 
