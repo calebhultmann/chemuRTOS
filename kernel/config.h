@@ -1,5 +1,5 @@
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef CHEMU_CONFIG_H
+#define CHEMU_CONFIG_H
 
 // Task Stack Buffers
 #define MAX_TASKS           8

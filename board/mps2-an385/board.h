@@ -1,5 +1,5 @@
-#ifndef BOARD_H
-#define BOARD_H
+#ifndef CHEMU_BOARD_H
+#define CHEMU_BOARD_H
 
 #define CPU_CLOCK_HZ 25000000
 

@@ -1,5 +1,5 @@
-#ifndef TASK_H
-#define TASK_H
+#ifndef CHEMU_TASK_H
+#define CHEMU_TASK_H
 
 #include <stdint.h>
 

@@ -1,5 +1,5 @@
-#ifndef ARCH_H
-#define ARCH_H
+#ifndef CHEMU_ARCH_H
+#define CHEMU_ARCH_H
 
 #include <stdint.h>
 
