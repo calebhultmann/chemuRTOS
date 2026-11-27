@@ -1,5 +1,7 @@
-#ifndef BOARD_API
-#define BOARD_API
+#ifndef BOARD_API_H
+#define BOARD_API_H
+
+#include <stdint.h>
 
 // Clocks, UART pins, anything board-specific
 void board_init(void);

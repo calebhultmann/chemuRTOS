@@ -1,8 +1,7 @@
-#include "arch.h"
+#include "board_api.h"
 
 extern int main(void);
 // extern void __libc_init_array(void);
-extern void system_init(void);
 
 // Symbols defined by the linker script
 extern unsigned int _idata;
@@ -35,7 +34,7 @@ void reset_handler(void) {
     copy_data();
     clear_bss();
     
-    system_init();
+    board_init();
 
     // __libc_init_array();
 

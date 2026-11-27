@@ -1,3 +1,6 @@
+#ifndef TASK_H
+#define TASK_H
+
 #include <stdint.h>
 
 typedef enum {
@@ -17,3 +20,5 @@ typedef struct TCB {
     const char* name;
     struct TCB* next;
 } TCB_t;
+
+#endif

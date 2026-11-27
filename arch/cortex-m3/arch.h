@@ -1,3 +1,6 @@
+#ifndef ARCH_H
+#define ARCH_H
+
 #include <stdint.h>
 
 // STCSR - Control and Status Register
@@ -17,3 +20,5 @@ typedef struct {
 
 #define SYSTICK_BASE 0xE000E010
 #define SysTick ((SysTick_Registers*)SYSTICK_BASE)
+
+#endif

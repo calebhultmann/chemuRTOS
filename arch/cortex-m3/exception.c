@@ -1,3 +1,5 @@
+#include "kernel_port.h"
+
 void hard_fault_handler(void) {
     while(1);
 }
