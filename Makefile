@@ -1,107 +1,121 @@
-TARGET := chemuRTOS
-
-CC := arm-none-eabi-gcc
-OBJDUMP := arm-none-eabi-objdump
-NM := arm-none-eabi-nm
-
-
-# ---BOARD---
-BOARD ?= mps2-an385
-BOARD_DIR := board/$(BOARD)
-BOARD_SRC_FILES := \
-	$(BOARD_DIR)/init.c \
-	$(BOARD_DIR)/vectors.c \
-
-
-# ---ARCHITECTURE---
-ARCH_mps2-an385 := cortex-m3
-ARCH := $(ARCH_$(BOARD))
-ARCH_DIR := arch/$(ARCH)
-ARCH_SRC_FILES := \
-	$(ARCH_DIR)/exception.c \
-	$(ARCH_DIR)/startup.c
-
-
-#---KERNEL---
-KERNEL_DIR := kernel
-KERNEL_SRC_FILES := \
-	kernel/core/scheduler.c \
-	kernel/core/task.c
-
-
-#---COMPILER---
-CFLAGS_cortex-m3 := -mcpu=cortex-m3 -mthumb
-CFLAGS := \
-	-g \
-	-std=c11 \
-	-O0 \
-	-Wall \
-	-Wextra \
-	-ffreestanding
-CFLAGS += $(CFLAGS_$(ARCH))
-CFLAGS += -Iarch/$(ARCH) -Iboard/$(BOARD)
-
-#---LINKER---
-LDFLAGS_cortex-m3 := -mcpu=cortex-m3 -mthumb
-LDSCRIPT := $(BOARD_DIR)/linker.ld
-LDFLAGS := \
-	--specs=nano.specs \
-	-nostartfiles \
-	-T $(LDSCRIPT) \
-	-Wl,-Map=build/$(TARGET).map
-LDFLAGS += $(LDFLAGS_$(ARCH))
-
+TARGET    := chemuRTOS
 BUILD_DIR := build
 
-C_SOURCES := \
-	$(KERNEL_SRC_FILES) \
-	$(BOARD_SRC_FILES) \
-	$(ARCH_SRC_FILES) \
-	main.c
+CC      := arm-none-eabi-gcc
+OBJDUMP := arm-none-eabi-objdump
+NM      := arm-none-eabi-nm
+SIZE    := arm-none-eabi-size
+QEMU    := qemu-system-arm
 
-C_OBJECTS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(C_SOURCES))
-ASM_OBJECTS := $(patsubst %.s,$(BUILD_DIR)/%.o,$(ASM_SOURCES))
+# =============================================================================
+# Board -> architecture mapping
+#   Add a new board by adding one ARCH_<board> line and a board/<board>/ folder.
+# =============================================================================
+BOARD ?= mps2-an385
 
-OBJECTS := $(C_OBJECTS) $(ASM_OBJECTS)
+ARCH_mps2-an385 := cortex-m3
+ARCH := $(ARCH_$(BOARD))
+ifeq ($(ARCH),)
+$(error Unknown BOARD '$(BOARD)': add an ARCH_$(BOARD) line to the Makefile)
+endif
 
-QEMU := qemu-system-arm
+BOARD_DIR  := board/$(BOARD)
+ARCH_DIR   := arch/$(ARCH)
+KERNEL_DIR := kernel
+API_DIR    := include
 
-QEMU_MACHINE := $(BOARD)
+# =============================================================================
+# Sources: every .c / .S in a layer's folder is compiled automatically,
+# so a new file can't be silently left out of the build.
+# =============================================================================
+ARCH_SRCS   := $(wildcard $(ARCH_DIR)/*.c   $(ARCH_DIR)/*.S)
+BOARD_SRCS  := $(wildcard $(BOARD_DIR)/*.c  $(BOARD_DIR)/*.S)
+KERNEL_SRCS := $(wildcard $(KERNEL_DIR)/*/*.c)
+APP_SRCS    := main.c
 
-QEMU_FLAGS := \
-	-M $(QEMU_MACHINE) \
-	-cpu $(ARCH) \
-	-kernel build/$(TARGET).elf \
-	-nographic \
-	-S \
-	-gdb tcp::3333 \
-	-no-reboot \
-	-no-shutdown
+SRCS := $(ARCH_SRCS) $(BOARD_SRCS) $(KERNEL_SRCS) $(APP_SRCS)
+OBJS := $(patsubst %,$(BUILD_DIR)/%.o,$(basename $(SRCS)))
+DEPS := $(OBJS:.o=.d)
 
-all: $(BUILD_DIR)/$(TARGET).elf
+# =============================================================================
+# Per-layer include paths: this is what enforces the layering.
+#   Every layer sees the public interfaces in include/.
+#   Each layer additionally sees ONLY its own private headers.
+#   So `#include "board.h"` from kernel code is a compile error, not a habit.
+# =============================================================================
+$(BUILD_DIR)/$(ARCH_DIR)/%.o:   LAYER_INC := -I$(ARCH_DIR)
+$(BUILD_DIR)/$(BOARD_DIR)/%.o:  LAYER_INC := -I$(BOARD_DIR)
+$(BUILD_DIR)/$(KERNEL_DIR)/%.o: LAYER_INC := -I$(KERNEL_DIR) -I$(KERNEL_DIR)/core
+$(BUILD_DIR)/main.o:            LAYER_INC :=
 
-$(BUILD_DIR)/$(TARGET).elf: $(OBJECTS)
-	$(CC) $(LDFLAGS) $^ -o $@
+# =============================================================================
+# Flags
+# =============================================================================
+CPUFLAGS_cortex-m3 := -mcpu=cortex-m3 -mthumb
+CPUFLAGS := $(CPUFLAGS_$(ARCH))
+
+CFLAGS := $(CPUFLAGS) -std=c11 -g -O0 \
+          -Wall -Wextra -ffreestanding \
+          -MMD -MP                     # emit .d files so header edits trigger rebuilds
+ASFLAGS := $(CPUFLAGS) -g -MMD -MP
+
+LDSCRIPT := $(BOARD_DIR)/linker.ld
+LDFLAGS  := $(CPUFLAGS) --specs=nano.specs -nostartfiles \
+            -T $(LDSCRIPT) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map
+
+# =============================================================================
+# Build rules
+# =============================================================================
+ELF := $(BUILD_DIR)/$(TARGET).elf
+
+.PHONY: all run debug dump sections symbols size clean
+
+all: $(ELF)
+
+$(ELF): $(OBJS) $(LDSCRIPT)
+	$(CC) $(LDFLAGS) $(OBJS) -o $@
+	@$(SIZE) $@
 
 $(BUILD_DIR)/%.o: %.c
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -I$(API_DIR) $(LAYER_INC) -c $< -o $@
 
-$(BUILD_DIR)/%.o: %.s
+# Capital .S = assembly run through the C preprocessor (#include, #define work)
+$(BUILD_DIR)/%.o: %.S
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(ASFLAGS) -I$(API_DIR) $(LAYER_INC) -c $< -o $@
 
-run: $(BUILD_DIR)/$(TARGET).elf
+-include $(DEPS)
+
+# =============================================================================
+# QEMU
+#   make run    - boot and print UART output to this terminal
+#   make debug  - boot halted, waiting for GDB on :3333 (cortex-debug attach)
+#   Quit QEMU with Ctrl-A then X.
+# =============================================================================
+QEMU_FLAGS := -M $(BOARD) -cpu $(ARCH) -kernel $(ELF) \
+              -nographic -no-reboot -no-shutdown
+
+run: $(ELF)
 	$(QEMU) $(QEMU_FLAGS)
 
-dump: $(BUILD_DIR)/$(TARGET).elf
+debug: $(ELF)
+	$(QEMU) $(QEMU_FLAGS) -S -gdb tcp::3333
+
+# =============================================================================
+# Inspection
+# =============================================================================
+dump: $(ELF)
 	$(OBJDUMP) -D $<
 
-sections: $(BUILD_DIR)/$(TARGET).elf
+sections: $(ELF)
 	$(OBJDUMP) -h $<
 
-symbols: $(BUILD_DIR)/$(TARGET).elf
-	$(NM) $<
+symbols: $(ELF)
+	$(NM) -n $<
+
+size: $(ELF)
+	$(SIZE) $<
 
 clean:
-	rm -rf build
+	rm -rf $(BUILD_DIR)
