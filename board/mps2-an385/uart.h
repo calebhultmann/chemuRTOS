@@ -47,7 +47,9 @@ typedef struct {
 #define UART3 ((UART_Registers*)UART3_BASE)
 #define UART4 ((UART_Registers*)UART4_BASE)
 
+#define UART_STATE_TXFULL 1
+
 void board_uart_init(void);
-void board_putc(void);
+void board_putc(char c);
 
 #endif
