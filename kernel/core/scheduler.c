@@ -7,6 +7,9 @@
 
 void scheduler_start(void) {
     arch_systick_init(board_cpu_hz(), SYSTICK_HZ);
+    board_init();
+
+    arch_systick_start();
 }
 
 void kernel_tick(void) {

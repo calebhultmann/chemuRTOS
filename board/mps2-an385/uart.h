@@ -1,6 +1,8 @@
 #ifndef CHEMU_UART_H
 #define CHEMU_UART_H
 
+#include <stdint.h>
+
 // DATA      - Data Value
 //              [7:0] Data value.
 //              Read Received data.
@@ -46,6 +48,6 @@ typedef struct {
 #define UART4 ((UART_Registers*)UART4_BASE)
 
 void board_uart_init(void);
-// putc
+void board_putc(void);
 
 #endif
